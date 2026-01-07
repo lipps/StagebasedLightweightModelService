@@ -1,0 +1,59 @@
+from typing import List, Literal, Optional
+from fastapi import FastAPI
+from pydantic import BaseModel
+from FlagEmbedding import BGEM3FlagModel
+import torch
+
+# 让 Torch 少抢 CPU
+torch.set_num_threads(1)
+
+# 只用一块 GPU（外面再通过 CUDA_VISIBLE_DEVICES 控制具体是哪一块）
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+# 加载 BGE-M3 模型
+model = BGEM3FlagModel(
+    "BAAI/bge-m3",
+    device=DEVICE,
+    use_fp16=True,          # 5090 支持 FP16 / BF16，减显存、提速
+)
+
+app = FastAPI(title="BGE-M3 Embedding Service")
+
+class EmbedRequest(BaseModel):
+    texts: List[str]
+    output_type: Literal["dense", "sparse", "colbert"] = "dense"
+    normalize: bool = True
+    max_length: int = 512
+
+class EmbedResponse(BaseModel):
+    embeddings: List[List[float]]
+
+
+@app.post("/embed", response_model=EmbedResponse)
+def embed(req: EmbedRequest):
+    """
+    输入：文本列表
+    输出：指定类型的向量列表（默认 dense 向量）
+    """
+    outputs = model.encode(
+        req.texts,
+        batch_size=32,
+        max_length=req.max_length,
+        return_dense=(req.output_type == "dense"),
+        return_sparse=(req.output_type == "sparse"),
+        return_colbert_vecs=(req.output_type == "colbert"),
+        normalize_embeddings=req.normalize,
+    )
+
+    if req.output_type == "dense":
+        vecs = outputs["dense_vecs"]
+    elif req.output_type == "sparse":
+        # 稀疏向量一般是检索场景用，这里简单返回 indices*values 展开成稠密（视需求改进）
+        # 为粗分分类用 dense 就够了
+        raise NotImplementedError("sparse 输出按需自行扩展")
+    else:  # colbert
+        # colbert 多向量场景，这里也按需扩展
+        raise NotImplementedError("colbert 输出按需自行扩展")
+
+    return EmbedResponse(embeddings=[v.tolist() for v in vecs])
+

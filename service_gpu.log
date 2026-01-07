@@ -1,0 +1,199 @@
+[0;32m=== BGE-M3 Pro 版服务启动 ===[0m
+
+[0;32m[模式] 自动选择设备[0m
+
+[0;32m[配置信息][0m
+  模型路径: /opt/bge-m3/models/bge-m3
+  设备模式: auto
+  CPU 线程: 8
+  最大批次: 128
+  最大长度: 8192
+  日志级别: INFO
+  模型预热: true
+
+[0;32m[激活环境][0m
+  虚拟环境已激活
+
+[0;32m[检查模型][0m
+  ✅ SafeTensors 模型: 2.2G
+
+[0;32m[GPU 检查][0m
+  GPU: NVIDIA GeForce RTX 5090, 32607 MiB
+NVIDIA GeForce RTX 5090, 32607 MiB
+NVIDIA GeForce RTX 5090, 32607 MiB
+NVIDIA GeForce RTX 5090, 32607 MiB
+
+[0;32m[启动服务][0m
+  访问地址: http://localhost:8001
+  API 文档: http://localhost:8001/docs
+  健康检查: http://localhost:8001/health
+  统计信息: http://localhost:8001/stats
+
+[1;33m按 Ctrl+C 停止服务[0m
+
+INFO:     Started server process [3706057]
+INFO:     Waiting for application startup.
+2026-01-07 07:59:18 | INFO | serve_bge_m3_pro:222 | 应用启动中...
+2026-01-07 07:59:18 | INFO | serve_bge_m3_pro:89 | 开始加载模型...
+2026-01-07 07:59:18 | INFO | serve_bge_m3_pro:97 | 设备配置: device=cuda, dtype=torch.float16, cpu_threads=1
+2026-01-07 07:59:18 | INFO | serve_bge_m3_pro:100 | 加载分词器: /opt/bge-m3/models/bge-m3
+2026-01-07 07:59:19 | INFO | serve_bge_m3_pro:108 | 加载模型权重: /opt/bge-m3/models/bge-m3
+`torch_dtype` is deprecated! Use `dtype` instead!
+2026-01-07 07:59:20 | INFO | serve_bge_m3_pro:118 | 模型加载完成，耗时 2.19s
+2026-01-07 07:59:20 | INFO | serve_bge_m3_pro:132 | 开始模型预热...
+2026-01-07 07:59:20 | WARNING | serve_bge_m3_pro:138 | 模型预热失败: 模型未加载或加载失败
+2026-01-07 07:59:20 | INFO | serve_bge_m3_pro:224 | 应用启动完成
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2026-01-07 07:59:37 | INFO | serve_bge_m3_pro:298 | 收到请求: GET /health
+2026-01-07 07:59:37 | INFO | serve_bge_m3_pro:305 | 请求完成: GET /health 状态=200 耗时=3.95ms
+INFO:     127.0.0.1:55722 - "GET /health HTTP/1.1" 200 OK
+2026-01-07 07:59:51 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 07:59:51 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=1, dim=1024, time=677.88ms, avg=677.88ms/text
+2026-01-07 07:59:51 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=684.07ms
+INFO:     127.0.0.1:42172 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:34:19 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:34:19 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=3, dim=1024, time=62.95ms, avg=20.98ms/text
+2026-01-07 08:34:19 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=70.25ms
+INFO:     127.0.0.1:53436 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: GET /health
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: GET /health 状态=200 耗时=3.58ms
+INFO:     127.0.0.1:54786 - "GET /health HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: GET /stats
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: GET /stats 状态=200 耗时=7.10ms
+INFO:     127.0.0.1:54792 - "GET /stats HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=44.70ms, avg=22.35ms/text
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=50.03ms
+INFO:     127.0.0.1:54802 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=10, dim=1024, time=27.10ms, avg=2.71ms/text
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=38.62ms
+INFO:     127.0.0.1:54816 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=50, dim=1024, time=44.28ms, avg=0.89ms/text
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=82.91ms
+INFO:     127.0.0.1:54822 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=100, dim=1024, time=75.16ms, avg=0.75ms/text
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=147.10ms
+INFO:     127.0.0.1:54824 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=422 耗时=1.34ms
+INFO:     127.0.0.1:36784 - "POST /embed HTTP/1.1" 422 Unprocessable Entity
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=422 耗时=2.73ms
+INFO:     127.0.0.1:36790 - "POST /embed HTTP/1.1" 422 Unprocessable Entity
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=422 耗时=0.96ms
+INFO:     127.0.0.1:36802 - "POST /embed HTTP/1.1" 422 Unprocessable Entity
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=12.54ms, avg=6.27ms/text
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=14.99ms
+INFO:     127.0.0.1:36814 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=12.90ms, avg=6.45ms/text
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=15.28ms
+INFO:     127.0.0.1:36816 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=13.36ms, avg=6.68ms/text
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=15.89ms
+INFO:     127.0.0.1:36822 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=13.34ms, avg=6.67ms/text
+2026-01-07 08:50:01 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=15.86ms
+INFO:     127.0.0.1:36838 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:298 | 收到请求: GET /health
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:305 | 请求完成: GET /health 状态=200 耗时=3.29ms
+INFO:     127.0.0.1:53626 - "GET /health HTTP/1.1" 200 OK
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:298 | 收到请求: GET /stats
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:305 | 请求完成: GET /stats 状态=200 耗时=2.70ms
+INFO:     127.0.0.1:53632 - "GET /stats HTTP/1.1" 200 OK
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=44.71ms, avg=22.35ms/text
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=50.29ms
+INFO:     127.0.0.1:53646 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=10, dim=1024, time=21.41ms, avg=2.14ms/text
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=33.42ms
+INFO:     127.0.0.1:53650 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=50, dim=1024, time=44.44ms, avg=0.89ms/text
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=83.08ms
+INFO:     127.0.0.1:53652 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:46 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=100, dim=1024, time=78.42ms, avg=0.78ms/text
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=148.87ms
+INFO:     127.0.0.1:53664 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=422 耗时=1.30ms
+INFO:     127.0.0.1:53670 - "POST /embed HTTP/1.1" 422 Unprocessable Entity
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=422 耗时=2.33ms
+INFO:     127.0.0.1:53680 - "POST /embed HTTP/1.1" 422 Unprocessable Entity
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=422 耗时=0.80ms
+INFO:     127.0.0.1:53688 - "POST /embed HTTP/1.1" 422 Unprocessable Entity
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=12.29ms, avg=6.14ms/text
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=14.73ms
+INFO:     127.0.0.1:53700 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=12.10ms, avg=6.05ms/text
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=14.40ms
+INFO:     127.0.0.1:53714 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=13.00ms, avg=6.50ms/text
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=15.57ms
+INFO:     127.0.0.1:53730 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=12.96ms, avg=6.48ms/text
+2026-01-07 08:59:47 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=15.42ms
+INFO:     127.0.0.1:53732 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: GET /health
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: GET /health 状态=200 耗时=2.97ms
+INFO:     127.0.0.1:51420 - "GET /health HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: GET /stats
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: GET /stats 状态=200 耗时=4.84ms
+INFO:     127.0.0.1:51426 - "GET /stats HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=42.27ms, avg=21.14ms/text
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=47.26ms
+INFO:     127.0.0.1:51432 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=10, dim=1024, time=19.21ms, avg=1.92ms/text
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=30.39ms
+INFO:     127.0.0.1:51438 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=50, dim=1024, time=42.93ms, avg=0.86ms/text
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=79.49ms
+INFO:     127.0.0.1:51448 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=100, dim=1024, time=71.77ms, avg=0.72ms/text
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=141.84ms
+INFO:     127.0.0.1:51456 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=422 耗时=1.24ms
+INFO:     127.0.0.1:51466 - "POST /embed HTTP/1.1" 422 Unprocessable Entity
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=422 耗时=2.56ms
+INFO:     127.0.0.1:51476 - "POST /embed HTTP/1.1" 422 Unprocessable Entity
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=422 耗时=0.82ms
+INFO:     127.0.0.1:51484 - "POST /embed HTTP/1.1" 422 Unprocessable Entity
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=12.66ms, avg=6.33ms/text
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=15.07ms
+INFO:     127.0.0.1:51486 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=12.22ms, avg=6.11ms/text
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=14.52ms
+INFO:     127.0.0.1:51496 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=13.04ms, avg=6.52ms/text
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=15.54ms
+INFO:     127.0.0.1:51504 - "POST /embed HTTP/1.1" 200 OK
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:298 | 收到请求: POST /embed
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:412 | 嵌入完成: count=2, dim=1024, time=13.07ms, avg=6.54ms/text
+2026-01-07 09:13:21 | INFO | serve_bge_m3_pro:305 | 请求完成: POST /embed 状态=200 耗时=15.58ms
+INFO:     127.0.0.1:51520 - "POST /embed HTTP/1.1" 200 OK
