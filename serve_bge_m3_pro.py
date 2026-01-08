@@ -6,14 +6,16 @@ BGE-M3 嵌入服务 - 生产级优化版本
 import os
 import time
 import logging
+from abc import ABC, abstractmethod
 from typing import List, Literal, Optional
 from contextlib import asynccontextmanager
 
 import torch
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field, validator
 from transformers import AutoTokenizer, AutoModel
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 
 # ==================== 配置管理 ====================
 
@@ -57,6 +59,44 @@ class Config:
             torch.set_num_threads(1)
             return 1
 
+    @classmethod
+    def validate(cls):
+        """验证配置 (启动时快速失败)"""
+        # 验证批次大小
+        if cls.MAX_BATCH_SIZE < 1:
+            raise ValueError(f"MAX_BATCH_SIZE 必须 >= 1，当前值: {cls.MAX_BATCH_SIZE}")
+        if cls.MAX_BATCH_SIZE > 1024:
+            raise ValueError(f"MAX_BATCH_SIZE 不应超过 1024，当前值: {cls.MAX_BATCH_SIZE}")
+
+        # 验证最大长度
+        if cls.MAX_LENGTH < 1:
+            raise ValueError(f"MAX_LENGTH 必须 >= 1，当前值: {cls.MAX_LENGTH}")
+        if cls.MAX_LENGTH > 8192:
+            raise ValueError(f"MAX_LENGTH 不应超过 8192 (模型限制)，当前值: {cls.MAX_LENGTH}")
+
+        # 验证模型路径
+        if not os.path.exists(cls.MODEL_ID):
+            raise FileNotFoundError(f"模型路径不存在: {cls.MODEL_ID}")
+
+        # 验证模型文件
+        has_safetensors = os.path.exists(os.path.join(cls.MODEL_ID, "model.safetensors"))
+        has_pytorch = os.path.exists(os.path.join(cls.MODEL_ID, "pytorch_model.bin"))
+        if not (has_safetensors or has_pytorch):
+            raise FileNotFoundError(
+                f"模型权重文件不存在: {cls.MODEL_ID}/model.safetensors 或 pytorch_model.bin"
+            )
+
+        # 验证分词器文件
+        if not os.path.exists(os.path.join(cls.MODEL_ID, "tokenizer_config.json")):
+            raise FileNotFoundError(f"分词器配置不存在: {cls.MODEL_ID}/tokenizer_config.json")
+
+        # 验证设备配置
+        device = cls.get_device()
+        if device == "cuda" and not torch.cuda.is_available():
+            raise RuntimeError("设备配置为 CUDA，但 CUDA 不可用")
+
+        logger.info(f"✅ 配置验证通过: device={device}, batch_size={cls.MAX_BATCH_SIZE}, max_length={cls.MAX_LENGTH}")
+
 
 # ==================== 日志配置 ====================
 
@@ -68,16 +108,72 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# ==================== Prometheus 指标 ====================
+
+# 请求计数器
+EMBED_REQUESTS_TOTAL = Counter(
+    'embed_requests_total',
+    'Total number of embed requests',
+    ['status']  # success, error
+)
+
+# 请求延迟直方图
+EMBED_LATENCY_SECONDS = Histogram(
+    'embed_latency_seconds',
+    'Embed request latency in seconds',
+    buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0]
+)
+
+# 文本数量直方图
+EMBED_TEXT_COUNT = Histogram(
+    'embed_text_count',
+    'Number of texts per request',
+    buckets=[1, 5, 10, 20, 50, 100, 200, 500, 1000]
+)
+
+# 模型就绪状态
+MODEL_READY_GAUGE = Gauge(
+    'model_ready',
+    'Whether the model is ready (1=ready, 0=not ready)'
+)
+
+
 # ==================== 全局状态 ====================
 
-class ModelManager:
-    """模型管理器"""
+class IModelManager(ABC):
+    """模型管理器抽象接口 (遵循依赖倒置原则)"""
+
+    @abstractmethod
+    def encode(
+        self,
+        texts: List[str],
+        max_length: int = 512,
+        normalize: bool = True,
+        batch_size: int = 32
+    ) -> List[List[float]]:
+        """编码文本为向量"""
+        pass
+
+    @property
+    @abstractmethod
+    def is_ready(self) -> bool:
+        """模型是否就绪"""
+        pass
+
+
+class ModelManager(IModelManager):
+    """模型管理器实现"""
     def __init__(self):
         self.tokenizer: Optional[AutoTokenizer] = None
         self.model: Optional[AutoModel] = None
         self.device: Optional[str] = None
         self.dtype: Optional[torch.dtype] = None
-        self.is_ready = False
+        self._is_ready = False
+
+    @property
+    def is_ready(self) -> bool:
+        """模型是否就绪"""
+        return self._is_ready
 
     def load(self):
         """加载模型"""
@@ -108,7 +204,7 @@ class ModelManager:
             logger.info(f"加载模型权重: {Config.MODEL_ID}")
             self.model = AutoModel.from_pretrained(
                 Config.MODEL_ID,
-                torch_dtype=self.dtype,
+                dtype=self.dtype,
                 local_files_only=True
             )
             self.model.to(self.device)
@@ -117,14 +213,17 @@ class ModelManager:
             load_time = time.time() - start_time
             logger.info(f"模型加载完成，耗时 {load_time:.2f}s")
 
+            # 设置就绪标志 (在预热前设置,避免预热时检查失败)
+            self._is_ready = True
+            MODEL_READY_GAUGE.set(1)  # 更新 Prometheus 指标
+
             # 模型预热
             if Config.ENABLE_WARMUP:
                 self.warmup()
 
-            self.is_ready = True
-
         except Exception as e:
             logger.error(f"模型加载失败: {e}", exc_info=True)
+            MODEL_READY_GAUGE.set(0)  # 更新 Prometheus 指标
             raise RuntimeError(f"模型加载失败: {e}")
 
     def warmup(self):
@@ -205,7 +304,8 @@ class ModelManager:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        self.is_ready = False
+        self._is_ready = False
+        MODEL_READY_GAUGE.set(0)  # 更新 Prometheus 指标
         logger.info("模型已卸载")
 
 
@@ -213,13 +313,23 @@ class ModelManager:
 model_manager = ModelManager()
 
 
+# ==================== 依赖注入 ====================
+
+def get_model_manager() -> IModelManager:
+    """获取模型管理器实例 (依赖注入)"""
+    return model_manager
+
+
 # ==================== FastAPI 生命周期 ====================
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
-    # 启动时加载模型
+    # 启动时验证配置
     logger.info("应用启动中...")
+    Config.validate()
+
+    # 加载模型
     model_manager.load()
     logger.info("应用启动完成")
 
@@ -374,7 +484,10 @@ async def health_check():
 
 
 @app.post("/embed", response_model=EmbedResponse)
-async def embed(req: EmbedRequest):
+async def embed(
+    req: EmbedRequest,
+    manager: IModelManager = Depends(get_model_manager)
+):
     """
     文本向量嵌入
 
@@ -385,7 +498,7 @@ async def embed(req: EmbedRequest):
 
     返回 1024 维向量
     """
-    if not model_manager.is_ready:
+    if not manager.is_ready:
         raise HTTPException(
             status_code=503,
             detail="模型未就绪，请稍后重试"
@@ -393,14 +506,18 @@ async def embed(req: EmbedRequest):
 
     start_time = time.time()
 
+    # 记录文本数量
+    EMBED_TEXT_COUNT.observe(len(req.texts))
+
     try:
         # 编码
-        embeddings = model_manager.encode(
-            texts=req.texts,
-            max_length=req.max_length,
-            normalize=req.normalize,
-            batch_size=req.batch_size
-        )
+        with EMBED_LATENCY_SECONDS.time():
+            embeddings = manager.encode(
+                texts=req.texts,
+                max_length=req.max_length,
+                normalize=req.normalize,
+                batch_size=req.batch_size
+            )
 
         # 计算耗时
         time_ms = (time.time() - start_time) * 1000
@@ -414,6 +531,9 @@ async def embed(req: EmbedRequest):
             f"time={time_ms:.2f}ms, avg={time_ms/count:.2f}ms/text"
         )
 
+        # 记录成功请求
+        EMBED_REQUESTS_TOTAL.labels(status='success').inc()
+
         return EmbedResponse(
             embeddings=embeddings,
             count=count,
@@ -423,12 +543,14 @@ async def embed(req: EmbedRequest):
 
     except torch.cuda.OutOfMemoryError:
         logger.error("GPU 内存不足")
+        EMBED_REQUESTS_TOTAL.labels(status='error').inc()  # 记录失败请求
         raise HTTPException(
             status_code=500,
             detail="GPU 内存不足，请减小 batch_size 或 max_length"
         )
     except Exception as e:
         logger.error(f"嵌入失败: {e}", exc_info=True)
+        EMBED_REQUESTS_TOTAL.labels(status='error').inc()  # 记录失败请求
         raise HTTPException(
             status_code=500,
             detail=f"嵌入失败: {str(e)}"
@@ -454,6 +576,23 @@ async def get_stats():
         })
 
     return stats
+
+
+@app.get("/metrics")
+async def metrics():
+    """
+    Prometheus 指标端点
+
+    暴露以下指标:
+    - embed_requests_total: 请求总数 (按状态分类)
+    - embed_latency_seconds: 请求延迟直方图
+    - embed_text_count: 每次请求的文本数量直方图
+    - model_ready: 模型就绪状态 (1=就绪, 0=未就绪)
+    """
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST
+    )
 
 
 # ==================== 主程序 ====================
