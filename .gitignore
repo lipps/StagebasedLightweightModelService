@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Models and Data
+models/
+data/
+checkpoints_bs/
+*.pt
+*.safetensors
+*.bin
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Temp
+*.backup*
+tmp/
