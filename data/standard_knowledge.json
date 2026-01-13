@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "text": "B点代表买入信号，S点代表卖出信号，这是我们的核心买卖点提示功能",
+    "intent": "bs_definition",
+    "category": "BS_Module"
+  },
+  {
+    "id": 2,
+    "text": "BS点是趋势指标，出现B点代表着这支股票的上涨趋势形成，S点代表着下跌趋势形成，这是我们的核心买卖点提示功能",
+    "intent": "bs_definition",
+    "category": "BS_Module"
+  },
+  {
+    "id": 3,
+    "text": "您看 K 线图里是不是有红色字母 B 和绿色字母 S？",
+    "intent": "bs_visual_confirm",
+    "category": "BS_Module"
+  },
+  {
+    "id": 4,
+    "text": "很多人以为 B=S=直接买卖点，其实不全对。B 点代表上涨趋势形成了，但不一定是最佳买入时机，最佳时机还得结合后面几个指标，您能懂吗？",
+    "intent": "bs_trend_logic",
+    "category": "BS_Module"
+  },
+  {
+    "id": 5,
+    "text": "S 点代表趋势结束，这个时候就不能再继续持有了。S 点是最晚的卖点；如果做短线，还可以用逃顶/分仓卖出优化位置，能理解吗？",
+    "intent": "s_point_exit",
+    "category": "BS_Module"
+  },
+  {
+    "id": 6,
+    "text": "B 点之后，K 线被红色外壳包住，这叫可安全操作区域；S 点之后被蓝色外壳包住，这是不可操作区域，风险更大。",
+    "intent": "bs_shell_explanation",
+    "category": "BS_Module"
+  },
+  {
+    "id": 7,
+    "text": "您观察一下：是不是每次大涨多从 B 区域开始？大跌多从 S 之后开始？",
+    "intent": "bs_historical_proof",
+    "category": "BS_Module"
+  },
+  {
+    "id": 8,
+    "text": "我们做股票更容易赚到钱的是：趋势向上/横盘/趋势向下，您选哪个？",
+    "intent": "bs_interaction_trend",
+    "category": "BS_Module"
+  },
+  {
+    "id": 9,
+    "text": "B 点是趋势形成，不等于当天买入，这句话您认同吗？",
+    "intent": "bs_interaction_logic",
+    "category": "BS_Module"
+  },
+  {
+    "id": 10,
+    "text": "红壳=可操作、蓝壳=风险大，这个好理解吧？",
+    "intent": "bs_interaction_shell",
+    "category": "BS_Module"
+  },
+  {
+    "id": 11,
+    "text": "所以 BS 是趋势指标。那问题来了：为啥有些 B 点后面也不怎么涨？——因为还缺‘资金’和‘量价活跃’的确认，我带您看下一项。",
+    "intent": "bs_transition",
+    "category": "BS_Module"
+  }
+]

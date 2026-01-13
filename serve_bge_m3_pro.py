@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field, validator
 from transformers import AutoTokenizer, AutoModel
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+from src.semantic_matcher import SemanticMatcher
 
 # ==================== 配置管理 ====================
 
@@ -168,6 +169,7 @@ class ModelManager(IModelManager):
         self.model: Optional[AutoModel] = None
         self.device: Optional[str] = None
         self.dtype: Optional[torch.dtype] = None
+        self.matcher: Optional[SemanticMatcher] = None
         self._is_ready = False
 
     @property
@@ -212,6 +214,15 @@ class ModelManager(IModelManager):
 
             load_time = time.time() - start_time
             logger.info(f"模型加载完成，耗时 {load_time:.2f}s")
+
+            # 加载语义匹配引擎 (如果索引存在)
+            index_path = "data/model_index.pt"
+            if os.path.exists(index_path):
+                try:
+                    self.matcher = SemanticMatcher(index_path, device=self.device)
+                    logger.info("语义匹配引擎加载完成")
+                except Exception as e:
+                    logger.error(f"语义匹配引擎加载失败: {e}")
 
             # 设置就绪标志 (在预热前设置,避免预热时检查失败)
             self._is_ready = True
@@ -379,6 +390,20 @@ class EmbedResponse(BaseModel):
     embeddings: List[List[float]]
     count: int
     dim: int
+    time_ms: float
+
+
+class MatchRequest(BaseModel):
+    """话术匹配请求"""
+    text: str = Field(..., description="用户输入的提问或话术")
+    top_k: int = Field(default=3, ge=1, le=10, description="返回候选结果数量")
+    threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="相似度阈值")
+
+
+class MatchResponse(BaseModel):
+    """话术匹配响应"""
+    best_match: Optional[dict] = None
+    candidates: List[dict] = []
     time_ms: float
 
 
@@ -555,6 +580,60 @@ async def embed(
             status_code=500,
             detail=f"嵌入失败: {str(e)}"
         )
+
+
+@app.post("/match", response_model=MatchResponse)
+async def match(
+    req: MatchRequest,
+    manager: ModelManager = Depends(get_model_manager)
+):
+    """
+    话术/意图匹配 (语义相似度)
+
+    - **text**: 用户输入的文本
+    - **top_k**: 返回候选数量 (默认 3)
+    - **threshold**: 相似度阈值 (默认 0.7)
+
+    基于向量余弦相似度在标准话术库中进行检索。
+    """
+    if not manager.is_ready:
+        raise HTTPException(status_code=503, detail="模型未就绪")
+    
+    if not manager.matcher:
+        raise HTTPException(status_code=501, detail="语义索引未加载，请检查 data/model_index.pt")
+
+    start_time = time.time()
+
+    try:
+        # 1. 对用户输入进行编码 (使用现有的 encode 方法，取第一条结果)
+        embeddings = manager.encode(
+            texts=[req.text],
+            max_length=512,
+            normalize=True,
+            batch_size=1
+        )
+        query_vec = torch.tensor(embeddings[0])
+
+        # 2. 在向量库中检索
+        results = manager.matcher.search(
+            query_vector=query_vec,
+            top_k=req.top_k,
+            threshold=req.threshold
+        )
+
+        time_ms = (time.time() - start_time) * 1000
+        
+        best_match = results[0] if results else None
+        
+        return MatchResponse(
+            best_match=best_match,
+            candidates=results,
+            time_ms=round(time_ms, 2)
+        )
+
+    except Exception as e:
+        logger.error(f"匹配失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"匹配失败: {str(e)}")
 
 
 @app.get("/stats", response_model=dict)
